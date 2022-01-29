@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # Parse args
     parser = argparse.ArgumentParser(description="utility for filtering chronica logs")
     parser.add_argument("log_file", type=open)
-    parser.add_argument("-c", help="filter by containing string")
+    parser.add_argument("-c", action='append', help="filter by containing string")
     # parser.add_argument("-m", help="filter by module (comma separated without space)")
     # parser.add_argument(
     #     "-l", help="filter by log level (comma separated without space)"
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     result = chunks
     # Contains
     if args.c:
-        result = filter(lambda x: args.c in x, result)
+        result = filter(lambda chunk: all(p in chunk for p in args.c), result)
     # if args.l:
     #     # TODO
     #     levels = map(str.upper, args.l.split(","))
