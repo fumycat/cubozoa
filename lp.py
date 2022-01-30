@@ -27,7 +27,8 @@ if __name__ == "__main__":
     # Parse args
     parser = argparse.ArgumentParser(description="utility for filtering chronica logs")
     parser.add_argument("log_file", type=open)
-    parser.add_argument("-c", action="append", help="filter by containing string")
+    parser.add_argument("-c", action="append", help="show entries what contains ALL arguments")
+    parser.add_argument("-y", action="append", help="show entries what contains ANY argument")
     parser.add_argument("-s", help="show entries after (HH:MM:SS.MMMMMM)")
     parser.add_argument("-e", help="show entries before (HH:MM:SS.MMMMMM)")
     # parser.add_argument("-m", help="filter by module (comma separated without space)")
@@ -43,9 +44,10 @@ if __name__ == "__main__":
 
     # Filters
     result = chunks
-    # Contains
     if args.c:
         result = filter(lambda chunk: all(p in chunk for p in args.c), result)
+    if args.y:
+        result = filter(lambda chunk: any(p in chunk for p in args.y), result)
     if args.s:
         start_time = fromisoformat(args.s)
         result = filter(
