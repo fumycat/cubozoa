@@ -8,6 +8,7 @@ import string
 import random
 import subprocess
 import datetime
+import itertools
 from pathlib import Path
 
 # Configuration
@@ -23,6 +24,11 @@ pool = string.ascii_letters + string.digits
 if TMP_DIR == "/dev/shm" and platform.system() == "Darwin":
     TMP_DIR = "/tmp"
 
+
+def parse_log_time(entry):
+    return fromisoformat(timestr.search(entry)[0])
+
+
 if __name__ == "__main__":
     # Parse args
     parser = argparse.ArgumentParser(description="utility for filtering chronica logs")
@@ -35,6 +41,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("-s", help="show entries after (HH:MM:SS.MMMMMM)")
     parser.add_argument("-e", help="show entries before (HH:MM:SS.MMMMMM)")
+    parser.add_argument("-ss", help="SLOW show entries after (HH:MM:SS.MMMMMM)")
+    parser.add_argument("-es", help="SLOW show entries before (HH:MM:SS.MMMMMM)")
     # parser.add_argument("-m", help="filter by module (comma separated without space)")
     # parser.add_argument(
     #     "-l", help="filter by log level (comma separated without space)"
@@ -48,20 +56,24 @@ if __name__ == "__main__":
 
     # Filters
     result = chunks
+
+    if args.s:
+        start_time = fromisoformat(args.s)
+        result = itertools.dropwhile(lambda x: parse_log_time(x) < start_time, result)
+    if args.e:
+        end_time = fromisoformat(args.e)
+        result = itertools.takewhile(lambda x: parse_log_time(x) < end_time, result)
+
     if args.c:
         result = filter(lambda chunk: all(p in chunk for p in args.c), result)
     if args.y:
         result = filter(lambda chunk: any(p in chunk for p in args.y), result)
-    if args.s:
-        start_time = fromisoformat(args.s)
-        result = filter(
-            lambda x: fromisoformat(timestr.search(x)[0]) >= start_time, result
-        )
-    if args.e:
-        end_time = fromisoformat(args.e)
-        result = filter(
-            lambda x: fromisoformat(timestr.search(x)[0]) <= end_time, result
-        )
+    if args.ss:
+        start_time = fromisoformat(args.ss)
+        result = filter(lambda x: parse_log_time(x) >= start_time, result)
+    if args.es:
+        end_time = fromisoformat(args.es)
+        result = filter(lambda x: parse_log_time(x) <= end_time, result)
     # if args.l:
     #     # TODO
     #     levels = map(str.upper, args.l.split(","))
